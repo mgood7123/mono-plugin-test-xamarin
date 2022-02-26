@@ -8,20 +8,51 @@ namespace threeplatforms
 {
     public partial class App : Application
     {
+        static View error(string message)
+        {
+            return new Label
+            {
+                Text = message
+            };
+        }
 
         public static View tryLoadLibrary(string path)
         {
             // Use the file name to load the assembly into the current
             // application domain.
-            Assembly a = Assembly.Load(path);
+            Assembly a = Assembly.LoadFile(path);
+            if (a == null) {
+                return error("failed to load Assembly File");
+            }
+
             // Get the type to use.
-            Type myType = a.GetType("Class1");
+            Type myType = a.GetType("test_plugin.Class1");
+            if (myType == null)
+            {
+                return error("failed to get type from Assembly File");
+            }
+
             // Get the method to call.
             MethodInfo myMethod = myType.GetMethod("onCreateView");
+            if (myMethod == null)
+            {
+                return error("failed to get method `onCreateView` from type");
+            }
+
             // Create an instance.
             object obj = Activator.CreateInstance(myType);
+            if (obj == null)
+            {
+                return error("failed to create instance of type");
+            }
+
             // Execute the method.
             View view = (View)myMethod.Invoke(obj, null);
+            if (view == null)
+            {
+                return error("failed to invoke method `onCreateView`, or method `onCreateView` returned null");
+            }
+
             return view;
         }
 
@@ -87,8 +118,7 @@ namespace threeplatforms
 
             add_Button.Clicked += (sender, eventArgs) =>
             {
-                string lib = @"\Users\smallville7123\Projects\threeplatforms\test_plugin\bin\Debug\netstandard2.1\test_plugin.dll";
-                View v = tryLoadLibrary(lib);
+                View v = tryLoadLibrary("/Users/smallville7123/Projects/threeplatforms/test_plugin/bin/Debug/netstandard2.1/test_plugin.dll");
 
                 content.Content = v == null ? new Button()
                 {
